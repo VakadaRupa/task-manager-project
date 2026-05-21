@@ -1,4 +1,4 @@
-const adminOnly = (req, res, next) => {
+const adminMiddleware = (req, res, next) => {
   if (req.user && req.user.role === 'Admin') {
     next();
   } else {
@@ -6,4 +6,4 @@ const adminOnly = (req, res, next) => {
   }
 };
 
-module.exports = { adminOnly };
+module.exports = { adminMiddleware };

@@ -2,23 +2,21 @@ import React, { useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import MetricCard from '../components/MetricCard';
-import TaskCard from '../components/TaskCard';
 import { 
   Users, 
-  Activity, 
   ListTodo, 
   CheckSquare, 
   Clock, 
   AlertCircle, 
   UserCheck, 
   UserMinus, 
-  Trash2, 
-  TrendingUp 
+  Trash2,
+  Activity
 } from 'lucide-react';
 
 const AdminDashboard = () => {
   const { user: currentAdmin } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('analytics'); // 'analytics', 'users', 'tasks', 'logs'
+  const [activeTab, setActiveTab] = useState('users'); // 'users', 'tasks', 'logs'
   
   // Data states
   const [analytics, setAnalytics] = useState({
@@ -36,40 +34,22 @@ const AdminDashboard = () => {
   const [error, setError] = useState('');
   const [actionSuccess, setActionSuccess] = useState('');
 
-  const fetchAnalytics = async () => {
-    const response = await api.get('/admin/analytics');
-    setAnalytics(response.data);
-  };
-
-  const fetchUsers = async () => {
-    const response = await api.get('/admin/users');
-    setUsers(response.data);
-  };
-
-  const fetchTasks = async () => {
-    const response = await api.get('/admin/tasks');
-    setTasks(response.data);
-  };
-
-  const fetchLogs = async () => {
-    const response = await api.get('/admin/logs');
-    setLogs(response.data);
-  };
-
   const loadData = async () => {
     try {
       setLoading(true);
       setError('');
       
-      if (activeTab === 'analytics') {
-        await fetchAnalytics();
-      } else if (activeTab === 'users') {
-        await fetchUsers();
-      } else if (activeTab === 'tasks') {
-        await fetchTasks();
-      } else if (activeTab === 'logs') {
-        await fetchLogs();
-      }
+      const [analyticsRes, usersRes, tasksRes, logsRes] = await Promise.all([
+        api.get('/admin/analytics'),
+        api.get('/admin/users'),
+        api.get('/admin/tasks'),
+        api.get('/admin/logs')
+      ]);
+
+      setAnalytics(analyticsRes.data);
+      setUsers(usersRes.data);
+      setTasks(tasksRes.data);
+      setLogs(logsRes.data);
       
       setLoading(false);
     } catch (err) {
@@ -80,16 +60,15 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     loadData();
-  }, [activeTab]);
+  }, []);
 
   const handleToggleUserStatus = async (userToUpdate) => {
     try {
       const newStatus = userToUpdate.status === 'Active' ? 'Inactive' : 'Active';
-      const response = await api.put(`/admin/users/${userToUpdate._id}/status`, { status: newStatus });
-      
-      setUsers(users.map(u => u._id === userToUpdate._id ? response.data : u));
+      await api.put(`/admin/users/${userToUpdate._id}/status`, { status: newStatus });
       setActionSuccess(`User status updated to ${newStatus}`);
       setTimeout(() => setActionSuccess(''), 3000);
+      loadData(); // Reload all data to keep counts in sync
     } catch (err) {
       setError(err.message || 'Failed to update user status');
     }
@@ -100,9 +79,9 @@ const AdminDashboard = () => {
     
     try {
       await api.delete(`/admin/users/${userId}`);
-      setUsers(users.filter(u => u._id !== userId));
       setActionSuccess('User and their data deleted successfully');
       setTimeout(() => setActionSuccess(''), 3000);
+      loadData(); // Reload all data to keep counts in sync
     } catch (err) {
       setError(err.message || 'Failed to delete user');
     }
@@ -113,29 +92,11 @@ const AdminDashboard = () => {
 
     try {
       await api.delete(`/tasks/${taskId}`);
-      setTasks(tasks.filter(t => t._id !== taskId));
       setActionSuccess('Task removed successfully');
       setTimeout(() => setActionSuccess(''), 3000);
-      
-      // Update local analytics counters if we delete a task while in task view
-      setAnalytics(prev => ({
-        ...prev,
-        totalTasks: prev.totalTasks - 1
-      }));
+      loadData(); // Reload all data to keep counts in sync
     } catch (err) {
       setError(err.message || 'Failed to delete task');
-    }
-  };
-
-  const handleToggleTaskStatusAdmin = async (task) => {
-    try {
-      const newStatus = task.status === 'Completed' ? 'Pending' : 'Completed';
-      const response = await api.put(`/tasks/${task._id}`, { status: newStatus });
-      
-      // Update tasks state
-      setTasks(tasks.map(t => t._id === task._id ? { ...response.data, assignedTo: task.assignedTo } : t));
-    } catch (err) {
-      setError(err.message || 'Failed to toggle task status');
     }
   };
 
@@ -148,15 +109,36 @@ const AdminDashboard = () => {
         </div>
       </header>
 
-      {/* Tabs Navigation */}
+      {/* Analytics Cards - Always visible at the top */}
+      <section className="metrics-grid">
+        <MetricCard 
+          title="Total Users" 
+          value={analytics.totalUsers} 
+          icon={Users} 
+          colorClass="metric-purple" 
+        />
+        <MetricCard 
+          title="Total Tasks" 
+          value={analytics.totalTasks} 
+          icon={ListTodo} 
+          colorClass="metric-blue" 
+        />
+        <MetricCard 
+          title="Completed Tasks" 
+          value={analytics.completedTasks} 
+          icon={CheckSquare} 
+          colorClass="metric-green" 
+        />
+        <MetricCard 
+          title="Pending Tasks" 
+          value={analytics.pendingTasks} 
+          icon={Clock} 
+          colorClass="metric-orange" 
+        />
+      </section>
+
+      {/* Tabs Navigation for 3 Required Sections */}
       <div className="admin-tabs">
-        <button 
-          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          <TrendingUp size={16} />
-          <span>System Analytics</span>
-        </button>
         <button 
           className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
@@ -194,79 +176,10 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Tab Contents */}
       {loading ? (
         <div className="loading-spinner">Fetching record data...</div>
       ) : (
         <div className="tab-content-area">
-          {/* Analytics View */}
-          {activeTab === 'analytics' && (
-            <div className="analytics-tab">
-              <div className="metrics-grid">
-                <MetricCard 
-                  title="Total Users" 
-                  value={analytics.totalUsers} 
-                  icon={Users} 
-                  colorClass="metric-purple" 
-                />
-                <MetricCard 
-                  title="Total Tasks" 
-                  value={analytics.totalTasks} 
-                  icon={ListTodo} 
-                  colorClass="metric-blue" 
-                />
-                <MetricCard 
-                  title="Completed Tasks" 
-                  value={analytics.completedTasks} 
-                  icon={CheckSquare} 
-                  colorClass="metric-green" 
-                />
-                <MetricCard 
-                  title="Pending Tasks" 
-                  value={analytics.pendingTasks} 
-                  icon={Clock} 
-                  colorClass="metric-orange" 
-                />
-              </div>
-
-              {/* Quick Summary Section */}
-              <div className="analytics-visuals glass">
-                <h3>System Performance Summary</h3>
-                <div className="progress-container">
-                  <div className="progress-label">
-                    <span>Task Completion Rate</span>
-                    <span>
-                      {analytics.totalTasks > 0 
-                        ? Math.round((analytics.completedTasks / analytics.totalTasks) * 100) 
-                        : 0}%
-                    </span>
-                  </div>
-                  <div className="progress-bar-bg">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ 
-                        width: `${analytics.totalTasks > 0 
-                          ? (analytics.completedTasks / analytics.totalTasks) * 100 
-                          : 0}%` 
-                      }}
-                    />
-                  </div>
-                </div>
-
-                <div className="metrics-summary-cards">
-                  <div className="summary-card">
-                    <h4>Active User Pool</h4>
-                    <p>All users in system database currently have system logins enabled.</p>
-                  </div>
-                  <div className="summary-card">
-                    <h4>Real-time Activity Logs</h4>
-                    <p>Security logging tracks modifications, deletions, and active sessions.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* User Management View */}
           {activeTab === 'users' && (
             <div className="users-tab glass">
@@ -281,7 +194,6 @@ const AdminDashboard = () => {
                       <th>Email</th>
                       <th>Role</th>
                       <th>Status</th>
-                      <th>Created At</th>
                       <th className="actions-header">Actions</th>
                     </tr>
                   </thead>
@@ -298,7 +210,6 @@ const AdminDashboard = () => {
                             {u.status}
                           </span>
                         </td>
-                        <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                         <td className="actions-cell">
                           {u._id !== currentAdmin._id ? (
                             <>
@@ -332,29 +243,54 @@ const AdminDashboard = () => {
 
           {/* Task Monitoring View */}
           {activeTab === 'tasks' && (
-            <div className="tasks-tab">
-              <div className="table-header glass mb-4">
+            <div className="tasks-tab glass">
+              <div className="table-header">
                 <h2>All System Tasks ({tasks.length})</h2>
               </div>
-
+              
               {tasks.length === 0 ? (
-                <div className="empty-state glass">
+                <div className="empty-state">
                   <ListTodo size={48} className="empty-icon" />
                   <h3>No tasks logged in database</h3>
                   <p>When users create tasks, they will appear here in real-time.</p>
                 </div>
               ) : (
-                <div className="task-grid">
-                  {tasks.map(task => (
-                    <TaskCard 
-                      key={task._id} 
-                      task={task} 
-                      onToggleStatus={handleToggleTaskStatusAdmin} 
-                      onEdit={() => {}} 
-                      onDelete={handleDeleteTaskAdmin}
-                      isAdminView={true}
-                    />
-                  ))}
+                <div className="table-responsive">
+                  <table className="admin-table">
+                    <thead>
+                      <tr>
+                        <th>Task</th>
+                        <th>Created By</th>
+                        <th>Status</th>
+                        <th className="actions-header">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {tasks.map(t => (
+                        <tr key={t._id}>
+                          <td>
+                            <div style={{ fontWeight: '600' }}>{t.title}</div>
+                            {t.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{t.description}</div>}
+                          </td>
+                          <td>{t.assignedTo ? `${t.assignedTo.name} (${t.assignedTo.email})` : 'Unknown'}</td>
+                          <td>
+                            <span className={`status-badge ${t.status === 'Completed' ? 'active' : 'warning'}`}>
+                              {t.status}
+                            </span>
+                          </td>
+                          <td className="actions-cell">
+                            <button 
+                              className="action-btn-pill delete-btn"
+                              onClick={() => handleDeleteTaskAdmin(t._id)}
+                            >
+                              <Trash2 size={14} />
+                              <span>Delete</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </div>
@@ -370,24 +306,19 @@ const AdminDashboard = () => {
                 <table className="admin-table logs-table">
                   <thead>
                     <tr>
-                      <th>Timestamp</th>
                       <th>User</th>
                       <th>Action</th>
-                      <th>Task Title</th>
-                      <th>Details</th>
+                      <th>Timestamp</th>
                     </tr>
                   </thead>
                   <tbody>
                     {logs.length === 0 ? (
                       <tr>
-                        <td colSpan="5" className="text-center">No activity recorded yet</td>
+                        <td colSpan="3" className="text-center">No activity recorded yet</td>
                       </tr>
                     ) : (
                       logs.map(log => (
                         <tr key={log._id}>
-                          <td className="timestamp-cell">
-                            {new Date(log.timestamp).toLocaleString()}
-                          </td>
                           <td className="user-info-cell">
                             {log.userId ? (
                               <>
@@ -403,14 +334,9 @@ const AdminDashboard = () => {
                               {log.action}
                             </span>
                           </td>
-                          <td>
-                            {log.taskId ? (
-                              <span className="log-task-title">{log.taskId.title}</span>
-                            ) : (
-                              <span className="text-muted">—</span>
-                            )}
+                          <td className="timestamp-cell">
+                            {new Date(log.timestamp).toLocaleString()}
                           </td>
-                          <td className="details-cell">{log.details || 'N/A'}</td>
                         </tr>
                       ))
                     )}

@@ -9,10 +9,10 @@ const {
   getAnalytics
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
-const { adminOnly } = require('../middleware/roleMiddleware');
+const { adminMiddleware } = require('../middleware/adminMiddleware');
 
-// Apply protect and adminOnly to all routes in this file
-router.use(protect, adminOnly);
+// Apply protect and adminMiddleware to all routes in this file
+router.use(protect, adminMiddleware);
 
 router.get('/users', getAllUsers);
 router.put('/users/:id/status', updateUserStatus);
