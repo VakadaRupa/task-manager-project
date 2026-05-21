@@ -24,10 +24,10 @@ const TaskCard = ({ task, onToggleStatus, onEdit, onDelete, isAdminView = false 
       )}
 
       <div className="task-card-footer">
-        {isAdminView && task.assignedTo && (
+        {isAdminView && task.createdBy && (
           <div className="task-assignee">
             <User size={14} />
-            <span>{task.assignedTo.name || task.assignedTo.email}</span>
+            <span>{task.createdBy.name || task.createdBy.email}</span>
           </div>
         )}
         

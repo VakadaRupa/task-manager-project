@@ -3,8 +3,8 @@ const jwt = require('jsonwebtoken');
 const { logActivity } = require('../utils/logger');
 
 // Generate JWT token
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'secret_jwt_key_123', {
+const generateToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET || 'secret_jwt_key_123', {
     expiresIn: '30d'
   });
 };
@@ -42,7 +42,7 @@ const registerUser = async (req, res) => {
         email: user.email,
         role: user.role,
         status: user.status,
-        token: generateToken(user._id)
+        token: generateToken(user._id, user.role)
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -82,7 +82,7 @@ const loginUser = async (req, res) => {
         email: user.email,
         role: user.role,
         status: user.status,
-        token: generateToken(user._id)
+        token: generateToken(user._id, user.role)
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });

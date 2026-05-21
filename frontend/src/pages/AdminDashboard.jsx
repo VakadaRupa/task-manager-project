@@ -272,7 +272,7 @@ const AdminDashboard = () => {
                             <div style={{ fontWeight: '600' }}>{t.title}</div>
                             {t.description && <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{t.description}</div>}
                           </td>
-                          <td>{t.assignedTo ? `${t.assignedTo.name} (${t.assignedTo.email})` : 'Unknown'}</td>
+                          <td>{t.createdBy ? `${t.createdBy.name} (${t.createdBy.email})` : 'Unknown'}</td>
                           <td>
                             <span className={`status-badge ${t.status === 'Completed' ? 'active' : 'warning'}`}>
                               {t.status}

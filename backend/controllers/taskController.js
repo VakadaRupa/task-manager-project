@@ -15,7 +15,7 @@ const createTask = async (req, res) => {
     const task = await Task.create({
       title,
       description,
-      assignedTo: req.user._id
+      createdBy: req.user._id
     });
 
     // Log the creation
@@ -36,10 +36,10 @@ const getTasks = async (req, res) => {
 
     if (req.user.role === 'Admin') {
       // Admin sees all tasks, populated with the user details
-      tasks = await Task.find({}).populate('assignedTo', 'name email role status');
+      tasks = await Task.find({}).populate('createdBy', 'name email role status');
     } else {
       // User sees only their own tasks
-      tasks = await Task.find({ assignedTo: req.user._id });
+      tasks = await Task.find({ createdBy: req.user._id });
     }
 
     res.json(tasks);
@@ -61,7 +61,7 @@ const updateTask = async (req, res) => {
     }
 
     // Check if task belongs to user (Admins can also update tasks if needed, but requirements state: "Users can: Update own tasks")
-    if (task.assignedTo.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+    if (task.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
       return res.status(403).json({ message: 'Access denied: You do not own this task' });
     }
 
@@ -97,7 +97,7 @@ const deleteTask = async (req, res) => {
     }
 
     // Check ownership or admin status
-    if (task.assignedTo.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
+    if (task.createdBy.toString() !== req.user._id.toString() && req.user.role !== 'Admin') {
       return res.status(403).json({ message: 'Access denied: Cannot delete other users\' tasks' });
     }
 

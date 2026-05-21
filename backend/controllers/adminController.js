@@ -68,7 +68,7 @@ const deleteUser = async (req, res) => {
     }
 
     // Delete user's tasks
-    await Task.deleteMany({ assignedTo: user._id });
+    await Task.deleteMany({ createdBy: user._id });
 
     // Delete user's activity logs
     await ActivityLog.deleteMany({ userId: user._id });
@@ -86,7 +86,7 @@ const deleteUser = async (req, res) => {
 // @access  Private/Admin
 const getAllTasksAdmin = async (req, res) => {
   try {
-    const tasks = await Task.find({}).populate('assignedTo', 'name email role status');
+    const tasks = await Task.find({}).populate('createdBy', 'name email role status');
     res.json(tasks);
   } catch (error) {
     res.status(500).json({ message: error.message });
