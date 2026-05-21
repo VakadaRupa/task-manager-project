@@ -16,11 +16,7 @@ const Register = () => {
   useEffect(() => {
     // If already logged in, redirect
     if (user) {
-      if (user.role === 'Admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      navigate('/dashboard');
     }
   }, [user, navigate]);
 
@@ -39,12 +35,8 @@ const Register = () => {
     }
 
     try {
-      const loggedUser = await register(name, email, password, role);
-      if (loggedUser.role === 'Admin') {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      await register(name, email, password, role);
+      navigate('/dashboard');
     } catch (err) {
       // Handled by context error state
     }

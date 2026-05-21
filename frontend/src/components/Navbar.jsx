@@ -23,7 +23,7 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-links">
-        {user.role === 'User' && (
+        {user?.role === 'User' && (
           <Link 
             to="/dashboard" 
             className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
@@ -33,25 +33,32 @@ const Navbar = () => {
           </Link>
         )}
 
-        {user.role === 'Admin' && (
+        {user?.role === "Admin" && (
           <>
             <Link 
-              to="/dashboard?tab=users" 
-              className={`nav-link ${location.pathname === '/dashboard' && (new URLSearchParams(location.search).get('tab') === 'users' || !new URLSearchParams(location.search).get('tab')) ? 'active' : ''}`}
+              to="/dashboard" 
+              className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+            >
+              <ShieldCheck size={18} />
+              <span>Dashboard</span>
+            </Link>
+            <Link 
+              to="/users" 
+              className={`nav-link ${location.pathname === '/users' ? 'active' : ''}`}
             >
               <User size={18} />
               <span>User Management</span>
             </Link>
             <Link 
-              to="/dashboard?tab=tasks" 
-              className={`nav-link ${location.pathname === '/dashboard' && new URLSearchParams(location.search).get('tab') === 'tasks' ? 'active' : ''}`}
+              to="/tasks-monitor" 
+              className={`nav-link ${location.pathname === '/tasks-monitor' ? 'active' : ''}`}
             >
               <ListTodo size={18} />
               <span>Task Monitoring</span>
             </Link>
             <Link 
-              to="/dashboard?tab=logs" 
-              className={`nav-link ${location.pathname === '/dashboard' && new URLSearchParams(location.search).get('tab') === 'logs' ? 'active' : ''}`}
+              to="/logs" 
+              className={`nav-link ${location.pathname === '/logs' ? 'active' : ''}`}
             >
               <Activity size={18} />
               <span>Activity Logs</span>

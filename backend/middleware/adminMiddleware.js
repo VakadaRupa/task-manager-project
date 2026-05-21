@@ -1,9 +1,10 @@
 const adminMiddleware = (req, res, next) => {
-  if (req.user && req.user.role === 'Admin') {
-    next();
-  } else {
-    res.status(403).json({ message: 'Access denied. Admin authorization required.' });
+  if (!req.user || req.user.role !== 'Admin') {
+    return res.status(403).json({
+      message: "Access denied"
+    });
   }
+  next();
 };
 
 module.exports = { adminMiddleware };

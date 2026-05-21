@@ -5,6 +5,9 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import UserDashboard from '../pages/UserDashboard';
 import AdminDashboard from '../pages/AdminDashboard';
+import UserManagement from '../pages/UserManagement';
+import TaskMonitoring from '../pages/TaskMonitoring';
+import ActivityLogs from '../pages/ActivityLogs';
 import Unauthorized from '../pages/Unauthorized';
 import DashboardLayout from '../layouts/DashboardLayout';
 
@@ -43,6 +46,9 @@ const PublicOnlyRoute = ({ children }) => {
 };
 
 const AppRoutes = () => {
+  const { user: authUser } = useContext(AuthContext);
+  const user = JSON.parse(localStorage.getItem("user"));
+
   return (
     <Routes>
       {/* Public Auth Routes */}
@@ -75,20 +81,34 @@ const AppRoutes = () => {
         <Route 
           path="/dashboard" 
           element={
-            (() => {
-              const user = JSON.parse(localStorage.getItem("user"));
-              console.log(user?.role);
-              return user?.role === "Admin" ? <AdminDashboard /> : <UserDashboard />;
-            })()
+            user?.role === "Admin"
+              ? <AdminDashboard />
+              : <UserDashboard />
           } 
         />
-        <Route 
-          path="/admin" 
+        <Route
+          path="/users"
           element={
-            <ProtectedRoute allowedRoles={['Admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } 
+            user?.role === "Admin"
+              ? <UserManagement />
+              : <Navigate to="/unauthorized" />
+          }
+        />
+        <Route
+          path="/tasks-monitor"
+          element={
+            user?.role === "Admin"
+              ? <TaskMonitoring />
+              : <Navigate to="/unauthorized" />
+          }
+        />
+        <Route
+          path="/logs"
+          element={
+            user?.role === "Admin"
+              ? <ActivityLogs />
+              : <Navigate to="/unauthorized" />
+          }
         />
       </Route>
 
