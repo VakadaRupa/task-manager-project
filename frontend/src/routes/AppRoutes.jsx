@@ -36,9 +36,6 @@ const PublicOnlyRoute = ({ children }) => {
   }
 
   if (user) {
-    if (user.role === 'Admin') {
-      return <Navigate to="/admin" replace />;
-    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -75,7 +72,16 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/dashboard" element={<UserDashboard />} />
+        <Route 
+          path="/dashboard" 
+          element={
+            (() => {
+              const user = JSON.parse(localStorage.getItem("user"));
+              console.log(user?.role);
+              return user?.role === "Admin" ? <AdminDashboard /> : <UserDashboard />;
+            })()
+          } 
+        />
         <Route 
           path="/admin" 
           element={

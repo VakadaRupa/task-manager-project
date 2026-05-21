@@ -23,22 +23,40 @@ const Navbar = () => {
       </div>
 
       <div className="navbar-links">
-        <Link 
-          to="/dashboard" 
-          className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
-        >
-          <ListTodo size={18} />
-          <span>My Tasks</span>
-        </Link>
+        {user.role === 'User' && (
+          <Link 
+            to="/dashboard" 
+            className={`nav-link ${location.pathname === '/dashboard' ? 'active' : ''}`}
+          >
+            <ListTodo size={18} />
+            <span>My Tasks</span>
+          </Link>
+        )}
 
         {user.role === 'Admin' && (
-          <Link 
-            to="/admin" 
-            className={`nav-link admin-nav-link ${location.pathname === '/admin' ? 'active' : ''}`}
-          >
-            <ShieldCheck size={18} />
-            <span>Admin Control</span>
-          </Link>
+          <>
+            <Link 
+              to="/dashboard?tab=users" 
+              className={`nav-link ${location.pathname === '/dashboard' && (new URLSearchParams(location.search).get('tab') === 'users' || !new URLSearchParams(location.search).get('tab')) ? 'active' : ''}`}
+            >
+              <User size={18} />
+              <span>User Management</span>
+            </Link>
+            <Link 
+              to="/dashboard?tab=tasks" 
+              className={`nav-link ${location.pathname === '/dashboard' && new URLSearchParams(location.search).get('tab') === 'tasks' ? 'active' : ''}`}
+            >
+              <ListTodo size={18} />
+              <span>Task Monitoring</span>
+            </Link>
+            <Link 
+              to="/dashboard?tab=logs" 
+              className={`nav-link ${location.pathname === '/dashboard' && new URLSearchParams(location.search).get('tab') === 'logs' ? 'active' : ''}`}
+            >
+              <Activity size={18} />
+              <span>Activity Logs</span>
+            </Link>
+          </>
         )}
       </div>
 

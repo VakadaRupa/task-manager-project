@@ -37,12 +37,14 @@ const registerUser = async (req, res) => {
 
     if (user) {
       res.status(201).json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        token: generateToken(user._id, user.role)
+        token: generateToken(user._id, user.role),
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status
+        }
       });
     } else {
       res.status(400).json({ message: 'Invalid user data' });
@@ -77,12 +79,14 @@ const loginUser = async (req, res) => {
       await logActivity(user._id, 'LOGIN', null, `User logged in: ${user.email}`);
 
       res.json({
-        _id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        status: user.status,
-        token: generateToken(user._id, user.role)
+        token: generateToken(user._id, user.role),
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          status: user.status
+        }
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });

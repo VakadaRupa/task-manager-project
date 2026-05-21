@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
 import MetricCard from '../components/MetricCard';
@@ -16,7 +17,12 @@ import {
 
 const AdminDashboard = () => {
   const { user: currentAdmin } = useContext(AuthContext);
-  const [activeTab, setActiveTab] = useState('users'); // 'users', 'tasks', 'logs'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'users';
+  
+  const setActiveTab = (tab) => {
+    setSearchParams({ tab });
+  };
   
   // Data states
   const [analytics, setAnalytics] = useState({

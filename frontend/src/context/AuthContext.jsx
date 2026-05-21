@@ -26,7 +26,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await api.post('/auth/login', { email, password });
-      const { token, ...userData } = response.data;
+      const { token, user: userData } = response.data;
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
@@ -47,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await api.post('/auth/register', { name, email, password, role });
-      const { token, ...userData } = response.data;
+      const { token, user: userData } = response.data;
 
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(userData));
